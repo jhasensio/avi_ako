@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hackazon
+  labels:
+    app: hackazon
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hackazon
+  template:
+    metadata:
+      labels:
+        app: hackazon
+    spec:
+      containers:
+        - image: mutzel/all-in-one-hackazon:postinstall
+          name: hackazon
+          ports:
+            - containerPort: 80
+              name: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hackazon
+spec:
+  selector:
+    app: hackazon
+  ports:
+  - port: 80
+    targetPort: 80
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: hackazon
+  labels:
+    app: hackazon
+spec:
+  tls:
+  - hosts:
+    - hackazon.avi.iberia.local
+    secretName: hackazon-secret
+  rules:
+    - host: hackazon.avi.iberia.local
+      http:
+        paths:
+        - path: /
+          backend:
+            serviceName: hackazon
+            servicePort: 80
+
