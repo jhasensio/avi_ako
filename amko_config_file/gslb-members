@@ -38,15 +38,15 @@ contexts:
 - context:
     cluster: Site1AZ1
     user: s1az1-admin
-  name: Site1AZ1-admin
+  name: s1az1
 - context:
     cluster: Site1AZ2
     user: s1az2-admin
-  name: Site1AZ2-admin
+  name: s1az2
 - context:
     cluster: Site2
     user: s2-admin
-  name: Site2-admin
+  name: s2
 
 kind: Config
 preferences: {}
