@@ -69,7 +69,7 @@ podSecurityContext: {}
 
 avicredentials:
   username: "admin"
-  password: "Fsj1n3tTp01$"
+  password: "Password01"
 
 
 service:
