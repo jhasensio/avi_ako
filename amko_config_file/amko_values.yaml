@@ -12,15 +12,15 @@ configs:
   gslbLeaderController: "10.10.20.42"
   controllerVersion: "20.1.2"
   memberClusters:
-    - clusterContext: "Site1AZ1-admin"
-    - clusterContext: "Site1AZ2-admin"
-    - clusterContext: "Site2-admin"
+    - clusterContext: "s1az1"
+    - clusterContext: "s1az2"
+    - clusterContext: "s2"
   refreshInterval: 1800
   logLevel: "INFO"
 
 gslbLeaderCredentials:
   username: admin
-  password: Password01
+  password: Fsj1n3tTp01$
 
 globalDeploymentPolicy:
   # appSelector takes the form of:
@@ -36,18 +36,18 @@ globalDeploymentPolicy:
   # list of all clusters that the GDP object will be applied to, can take any/all values
   # from .configs.memberClusters
   matchClusters:
-    - "Site1AZ1-admin"
-    - "Site1AZ2-admin"
-    - "Site2-admin"
+    - "s1az1"
+    - "s1az1"
+    - "s2"
 
   # list of all clusters and their traffic weights, if unspecified, default weights will be
   # given (optional). Uncomment below to add the required trafficSplit.
   trafficSplit:
-    - cluster: "Site1AZ1-admin"
+    - cluster: "s1az1"
       weight: 6
-    - cluster: "Site1AZ2-admin"
+    - cluster: "s1az2"
       weight: 4
-    - cluster: "Site2-admin"
+    - cluster: "s2"
       weight: 2
 
 serviceAccount:
