@@ -19,18 +19,17 @@ if __name__ == "__main__":
   gslb_service=script_parms['events'][0]['event_details']['se_hm_gs_details']['gslb_service']
   message=("GS_SERVICE_UP: The service *"+gslb_service+"* is now up and running.")
   message_slack={
-                 "text": "Alarm Message from NSX ALB",
+                 "text": "Alarm Message from AVI NSX ALB",
                  "color": "#00FF00", 
                  "fields": [{
                  "title": "GS_SERVICE_UP",
                  "value": "The service *"+gslb_service+"* is now up and running."
                 }]}
-  # Outputs the message in AVI Alerts GUI
   print(message)
 
-# Set the webhook_url to the one provided by Slack when you create the webhook at https://my.slack.com/services/new/incoming-webhook/ 
+# Set the webhook_url to the one provided by Slack when you create the webhook at https://my.slack.com/services/new/incoming-webhook/
+  webhook_url = 'https://hooks.slack.com/services/<use-your-own-webhook-here>'
 
-webhook_url = 'https://hooks.slack.com/services/<use-your-webhook-url-here>'
   response = requests.post(
      webhook_url, data=json.dumps(message_slack),
      headers={'Content-Type': 'application/json'}
