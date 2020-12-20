@@ -37,7 +37,7 @@ while true; do
         curl -m 2 $server -s > /tmp/response.out
         messageResponse=$(cat /tmp/response.out | grep MESSAGE | awk '{print $6, $7}')
         podResponse=$(cat /tmp/response.out | grep hello | cut -b 11-32)
-        echo -e "      Este servicio reside en \e[30;48;5;82m"$messageResponse"\e[0m"
+        echo -e "      This service resides in \e[30;48;5;82m"$messageResponse"\e[0m"
         echo -e "   POD Name: \033[0;32m"$podResponse"\033[0m"
         echo -e "\033[0;31m--------------------------------------------------\033[0m"
         sleep $interval
