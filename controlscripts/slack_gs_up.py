@@ -25,7 +25,8 @@ if __name__ == "__main__":
                  "title": "GS_SERVICE_UP",
                  "value": "The service *"+gslb_service+"* is now up and running."
                 }]}
-  #print(message)
+  # Outputs the message in AVI Alerts GUI
+  print(message)
 
 # Set the webhook_url to the one provided by Slack when you create the webhook at https://my.slack.com/services/new/incoming-webhook/ 
 
