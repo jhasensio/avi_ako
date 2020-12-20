@@ -23,7 +23,7 @@ if __name__ == "__main__":
                  "color": "#FF0000", 
                  "fields": [{
                  "title": "GS_SERVICE_DOWN",
-                 "value": "The service "+gslb_service+" is no longer available.",
+                 "value": "The service *"+gslb_service+"* is no longer available.",
                 }]}
   print(message)
 
