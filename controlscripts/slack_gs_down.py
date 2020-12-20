@@ -28,7 +28,7 @@ if __name__ == "__main__":
   print(message)
 
 # Set the webhook_url to the one provided by Slack when you create the webhook at https://my.slack.com/services/new/incoming-webhook/
-  webhook_url = 'https://hooks.slack.com/services/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'
+  webhook_url = 'https://hooks.slack.com/services/<use-your-own-webhook-here>'
 
   response = requests.post(
      webhook_url, data=json.dumps(message_slack),
