@@ -37,7 +37,7 @@ globalDeploymentPolicy:
   # from .configs.memberClusters
   matchClusters:
     - "s1az1"
-    - "s1az1"
+    - "s1az2"
     - "s2"
 
   # list of all clusters and their traffic weights, if unspecified, default weights will be
