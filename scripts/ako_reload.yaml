@@ -7,7 +7,7 @@ helm repo update
 appVersion=$(helm search repo | grep ako | awk '{print $3}')
 
 # Get Release number of current deployed chart
-akoRelease=$(helm list -n avi-system | grep ako | awk '{print $1}')
+akoRelease=$(helm list -n avi-system | grep ako | grep -v operator | awk '{print $1}')
 
 # Delete existing helm release and install a new one
 helm delete $akoRelease -n avi-system
