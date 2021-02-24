@@ -4,7 +4,7 @@ helm repo add ako https://avinetworks.github.io/avi-helm-charts/charts/stable/ak
 
 helm repo update
 # Get newest AKO APP Version
-appVersion=$(helm search repo | grep ako | awk '{print $3}')
+appVersion=$(helm search repo | grep ako | grep -v operator | awk '{print $3}')
 
 # Get Release number of current deployed chart
 akoRelease=$(helm list -n avi-system | grep ako | grep -v operator | awk '{print $1}')
