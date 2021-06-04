@@ -1,4 +1,3 @@
-ubuntu@s1-az1-k8s-master01:~$ more values.yaml
 # Default values for ako.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
