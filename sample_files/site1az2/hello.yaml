@@ -33,11 +33,12 @@ spec:
         - name: MESSAGE
           value: "MESSAGE: This service resides in SITE1 AZ2"
 ---
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: hello
   labels:
+    app: hello
     app: gslb
 spec:
   rules:
@@ -45,6 +46,9 @@ spec:
       http:
         paths:
         - path: /
+          pathType: Prefix
           backend:
-            serviceName: hello
-            servicePort: 80
+            service:
+              name: hello
+              port:
+                number: 80 
