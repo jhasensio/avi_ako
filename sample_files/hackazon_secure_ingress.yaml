@@ -38,7 +38,6 @@ metadata:
   name: hackazon
   labels:
     app: hackazon
-    app: gslb
 spec:
   tls:
   - hosts:
