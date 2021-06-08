@@ -5,18 +5,28 @@
 replicaCount: 1
 
 image:
-  repository: avinetworks/ako
+  repository: projects.registry.vmware.com/ako/ako
   pullPolicy: IfNotPresent
 
 ### This section outlines the generic AKO settings
 AKOSettings:
-  logLevel: "INFO" #enum: INFO|DEBUG|WARN|ERROR
-  fullSyncFrequency: "1800" # This frequency controls how often AKO polls the Avi controller to update itself with cloud configurations.
-  apiServerPort: 8080 # Specify the port for the API server, default is set as 8080 // EmptyAllowed: false
-  deleteConfig: "false" # Has to be set to true in configmap if user wants to delete AKO created objects from AVI
-  disableStaticRouteSync: "false" # If the POD networks are reachable from the Avi SE, set this knob to true.
-  clusterName: "S2" # A unique identifier for the kubernetes cluster, that helps distinguish the objects for this cluster in the avi controller. // MUST-EDIT
-  cniPlugin: "" # Set the string if your CNI is calico or openshift. enum: calico|canal|flannel|openshift
+  logLevel: WARN   # enum: INFO|DEBUG|WARN|ERROR
+  fullSyncFrequency: '1800' # This frequency controls how often AKO polls the Avi controller to update itself with cloud configurations.
+  apiServerPort: 8080 # Internal port for AKO's API server for the liveness probe of the AKO pod default=8080
+  deleteConfig: 'false' # Has to be set to true in configmap if user wants to delete AKO created objects from AVI
+  disableStaticRouteSync: 'false' # If the POD networks are reachable from the Avi SE, set this knob to true.
+  clusterName: S2   # A unique identifier for the kubernetes cluster, that helps distinguish the objects for this cluster in the avi controller. // MUST-EDIT
+  cniPlugin: 'antrea' # Set the string if your CNI is calico or openshift. enum: calico|canal|flannel|openshift|antrea
+  enableEVH: false # This enables the Enhanced Virtual Hosting Model in Avi Controller for the Virtual Services
+  GRBAC: false # Granular RBAC support, switched off by default
+  layer7Only: false # If this flag is switched on, then AKO will only do layer 7 loadbalancing.
+  # NamespaceSelector contains label key and value used for namespacemigration
+  # Same label has to be present on namespace/s which needs migration/sync to AKO
+  namespaceSelector:
+    labelKey: ''
+    labelValue: ''
+  servicesAPI: true # Flag that enables AKO in services API mode: https://kubernetes-sigs.github.io/service-apis/. Currently implemented only for L4. This flag uses the upstream GA APIs which are not backward compatible
+                     # with the advancedL4 APIs which uses a fork and a version of v1alpha1pre1
 
 ### This section outlines the network settings for virtualservices.
 NetworkSettings:
@@ -28,32 +38,39 @@ NetworkSettings:
   #     cidrs:
   #       - 10.0.0.1/24
   #       - 11.0.0.1/24
-  subnetIP: "10.10.23.0" # Subnet IP of the vip network
-  subnetPrefix: "255.255.255.0" # Subnet Prefix of the vip network
-  networkName: "AVI_FRONTEND_3023" # Network Name of the vip network
+  subnetIP: 10.10.23.0 # Subnet IP of the vip network
+  subnetPrefix: 24 # Subnet Prefix of the vip network
+  enableRHI: false # This is a cluster wide setting for BGP peering.
+  #vipNetworkList: [] # Network Name of the VIP network, multiple networks allowed only for AWS Cloud.
+  vipNetworkList:
+     - networkName: AVI_FRONTEND_3023
 
 ### This section outlines all the knobs  used to control Layer 7 loadbalancing settings in AKO.
 L7Settings:
-  defaultIngController: "true"
-  l7ShardingScheme: "hostname"
-  serviceType: ClusterIP #enum NodePort|ClusterIP
-  shardVSSize: "LARGE" # Use this to control the layer 7 VS numbers. This applies to both secure/insecure VSes but does not apply for passthrough. ENUMs: LARGE, MEDIUM, SMALL
-  passthroughShardSize: "SMALL" # Control the passthrough virtualservice numbers using this ENUM. ENUMs: LARGE, MEDIUM, SMALL
+  defaultIngController: 'true'
+  noPGForSNI: false # Switching this knob to true, will get rid of poolgroups from SNI VSes. Do not use this flag, if you don't want http caching. This will be deprecated once the controller support caching on PGs.
+  serviceType: ClusterIP # enum NodePort|ClusterIP|NodePortLocal
+  shardVSSize: LARGE   # Use this to control the layer 7 VS numbers. This applies to both secure/insecure VSes but does not apply for passthrough. ENUMs: LARGE, MEDIUM, SMALL, DEDICATED
+  passthroughShardSize: SMALL   # Control the passthrough virtualservice numbers using this ENUM. ENUMs: LARGE, MEDIUM, SMALL
 
 ### This section outlines all the knobs  used to control Layer 4 loadbalancing settings in AKO.
 L4Settings:
-  defaultDomain: "" # If multiple sub-domains are configured in the cloud, use this knob to set the default sub-domain to use for L4 VSes.
+  advancedL4: 'false' # Use this knob to control the settings for the services API usage. Default to not using services APIs: https://github.com/kubernetes-sigs/service-apis
+  defaultDomain: 'avi.iberia.local' # If multiple sub-domains are configured in the cloud, use this knob to set the default sub-domain to use for L4 VSes.
+  autoFQDN: default   # ENUM: default(<svc>.<ns>.<subdomain>), flat (<svc>-<ns>.<subdomain>), "disabled" If the value is disabled then the FQDN generation is disabled.
 
 ### This section outlines settings on the Avi controller that affects AKO's functionality.
 ControllerSettings:
-  serviceEngineGroupName: "S2-SE-Group" # Name of the ServiceEngine Group.
-  controllerVersion: "20.1.2" # The controller API version
-  cloudName: "Default-Cloud" # The configured cloud name on the Avi controller.
-  controllerIP: "10.10.20.44"
+  serviceEngineGroupName: S2-SE-Group   # Name of the ServiceEngine Group.
+  controllerVersion: 20.1.5   # The controller API version
+  cloudName: Default-Cloud   # The configured cloud name on the Avi controller.
+  controllerHost: 10.10.10.44 # IP address or Hostname of Avi Controller
+  tenantsPerCluster: 'false' # If set to true, AKO will map each kubernetes cluster uniquely to a tenant in Avi
+  tenantName: admin   # Name of the tenant where all the AKO objects will be created in AVI. // Required only if tenantsPerCluster is set to True
 
 nodePortSelector: # Only applicable if serviceType is NodePort
-  key: ""
-  value: ""
+  key: ''
+  value: ''
 
 resources:
   limits:
@@ -61,15 +78,19 @@ resources:
     memory: 300Mi
   requests:
     cpu: 100m
-    memory: 75Mi
+    memory: 200Mi
 
 podSecurityContext: {}
-  # fsGroup: 2000
+
+rbac:
+  # Creates the pod security policy if set to true
+  pspEnable: false
 
 
 avicredentials:
-  username: "admin"
-  password: "Password01"
+  username: 'admin'
+  password: 'Password01'
+  certificateAuthorityData:
 
 
 service:
@@ -77,6 +98,6 @@ service:
   port: 80
 
 
-persistentVolumeClaim: ""
-mountPath: "/log"
-logFile: "avi.log"
+persistentVolumeClaim: ''
+mountPath: /log
+logFile: avi.log
