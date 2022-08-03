@@ -1,0 +1,215 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: avi-metrics-configmap
+  namespace: avi-metrics
+data:
+  # Change values according to your configuration
+  avi_controllers.json: |
+    {"controllers":[
+       {
+       "avi_controller":"172.25.5.6",
+       "location":"madrid",
+       "environment":"prod",
+       "avi_user":"admin",
+       "_comment":"ACCEPTS PLAINTEXT OR BASE64 ENCODED PASSWORD",
+       "avi_pass":"mY6MY59ixeI!"
+       }
+       ]
+    }
+  graphite_host.json: |
+    {"graphite":
+       {
+       "server": "graphite",
+       "server_port": 2003
+       }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: avi-metrics
+  name: avi-metrics
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: avi-metrics
+  template:
+    metadata:
+      labels:
+        name: avi-metrics
+    spec:
+      volumes:
+      - name: controllers-config-volume
+        configMap:
+          name: avi-metrics-configmap
+          items:
+            - key: avi_controllers.json
+              path: avi_controllers.json
+      - name: endpoint-config-volume
+        configMap:
+          name: avi-metrics-configmap
+          items:
+            - key: graphite_host.json
+              path: graphite_host.json
+      containers:
+      - name: avi-metrics
+        image: avinetworks/avi-metrics:latest
+        env:
+        - name: EN_METRIC_ENDPOINT
+          value: "graphite"
+        volumeMounts:
+        - name: controllers-config-volume
+          mountPath: /usr/src/avi/avi_controllers.json
+          subPath: avi_controllers.json
+        - name: endpoint-config-volume
+          mountPath: /usr/src/avi/graphite_host.json
+          subPath: graphite_host.json
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: graphite-pv
+  namespace: avi-metrics
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: graphite-pvc
+  namespace: avi-metrics
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: avi-metrics
+  name: avi-graphite
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: avi-graphite
+  template:
+    metadata:
+      labels:
+        app: avi-graphite
+    spec:
+      volumes:
+      - name: graphite-data
+        persistentVolumeClaim:
+          claimName: graphite-pvc
+      containers:
+        - name: avi-graphite
+          image: avinetworks/graphite:latest
+          ports:
+            - containerPort: 80
+              name: port-80
+            - containerPort: 2003
+              name: port-2003
+          volumeMounts:
+          - mountPath: "/opt/graphite/storage"
+            name: graphite-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: graphite
+  namespace: avi-metrics
+spec:
+  ports:
+   - name: port-80
+     protocol: TCP
+     targetPort: 80
+     port: 8008
+   - name: port-2003
+     protocol: TCP
+     targetPort: 2003
+     port: 2003
+  selector:
+     app: avi-graphite
+  type: ClusterIP
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: avi-grafana-configmap
+  namespace: avi-metrics
+data:
+  datasource.yml: |
+     apiVersion: 1
+     datasources:
+     - name: graphite
+       type: graphite
+       access: proxy
+       orgId: 1
+       url: http://graphite:8008
+       isDefault: true
+       jsonData:
+          graphiteVersion: "1.12"
+          tlsAuth: false
+          tlsAuthWithCACert: false
+       version: 1
+       editable: true
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: avi-metrics
+  name: avi-grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: avi-grafana
+  template:
+    metadata:
+      labels:
+        app: avi-grafana
+    spec:
+      volumes:
+        - name: datasource-config-volume
+          configMap:
+            name: avi-grafana-configmap
+            items:
+            - key: datasource.yml
+              path: datasource.yml
+      containers:
+        - name: avi-grafana
+          image: avinetworks/grafana:latest
+          ports:
+            - containerPort: 3000
+              name: port-3000
+          volumeMounts:
+          - name: datasource-config-volume
+            mountPath: /etc/grafana/provisioning/datasources/datasource.yml
+            subPath: datasource.yml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-service
+  namespace: avi-metrics
+spec:
+  ports:
+   - name: port-3000
+     protocol: TCP
+     targetPort: 3000
+     port: 3000
+  selector:
+     app: avi-grafana
+  type: LoadBalancer
