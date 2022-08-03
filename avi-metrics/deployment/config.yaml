@@ -12,7 +12,7 @@ data:
        "environment":"prod",
        "avi_user":"admin",
        "_comment":"ACCEPTS PLAINTEXT OR BASE64 ENCODED PASSWORD",
-       "avi_pass":"mY6MY59ixeI!"
+       "avi_pass":"PASSWORD123!!!"
        }
        ]
     }
