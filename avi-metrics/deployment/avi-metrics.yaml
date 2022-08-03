@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: avi-metrics
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: avi-metrics
+  name: avi-metrics
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: avi-metrics
+  template:
+    metadata:
+      labels:
+        name: avi-metrics
+    spec:
+      volumes:
+      - name: controllers-config-volume
+        configMap:
+          name: avi-metrics-configmap
+          items:
+            - key: avi_controllers.json
+              path: avi_controllers.json
+      - name: endpoint-config-volume
+        configMap:
+          name: avi-metrics-configmap
+          items:
+            - key: graphite_host.json
+              path: graphite_host.json
+      containers:
+      - name: avi-metrics
+        image: avinetworks/avi-metrics:latest
+        env:
+        - name: EN_METRIC_ENDPOINT
+          value: "graphite"
+        volumeMounts:
+        - name: controllers-config-volume
+          mountPath: /usr/src/avi/avi_controllers.json
+          subPath: avi_controllers.json
+        - name: endpoint-config-volume
+          mountPath: /usr/src/avi/graphite_host.json
+          subPath: graphite_host.json
