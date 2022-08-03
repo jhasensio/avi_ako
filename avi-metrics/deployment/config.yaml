@@ -1,0 +1,25 @@
+kind: ConfigMap
+metadata:
+  name: avi-metrics-configmap
+  namespace: avi-metrics
+data:
+  # Change values according to your configuration
+  avi_controllers.json: |
+    {"controllers":[
+       {
+       "avi_controller":"172.25.5.6",
+       "location":"madrid",
+       "environment":"prod",
+       "avi_user":"admin",
+       "_comment":"ACCEPTS PLAINTEXT OR BASE64 ENCODED PASSWORD",
+       "avi_pass":"mY6MY59ixeI!"
+       }
+       ]
+    }
+  graphite_host.json: |
+    {"graphite":
+       {
+       "server": "graphite",
+       "server_port": 2003
+       }
+    }
