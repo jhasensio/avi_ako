@@ -9,10 +9,12 @@ data:
      datasources:
      - name: graphite
        type: graphite
+       access: proxy
        orgId: 1
        url: http://graphite:8008
+       isDefault: true
        jsonData:
-          graphiteVersion: "1.13"
+          graphiteVersion: "1.12"
           tlsAuth: false
           tlsAuthWithCACert: false
        version: 1
